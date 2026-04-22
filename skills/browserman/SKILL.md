@@ -40,6 +40,8 @@ Tool selection order:
 
 ## Recommended setup
 
+After installing this skill, proactively complete BrowserMan setup before trying to use BrowserMan for a real task.
+
 Recommended path:
 
 ```bash
