@@ -1,40 +1,64 @@
 ---
 name: browserman
-description: Use BrowserMan when you want a coding agent to automate a real browser with delegated auth, BrowserMan CLI, or MCP. Prefer built-in BrowserMan scripts first, then fall back to low-level browser commands.
+description: Use BrowserMan when an agent needs the user's real browser environment, delegated access to a real logged-in session, or BrowserMan's site-optimized automation scripts.
 ---
 
 # BrowserMan
 
-Use BrowserMan to control a real browser through delegated auth.
+BrowserMan gives the agent access to the user's real browser environment.
 
-## When to use this skill
-
-Use this skill when:
-- you need a coding agent to work in a real browser
-- you want to reuse a signed-in browser session
-- you want browser access scoped through BrowserMan approval
-- you want to drive BrowserMan through CLI first, with MCP as an optional host integration
+Use BrowserMan when the task depends on:
+- the user's existing login session
+- real browser state, tabs, cookies, or extension-connected context
+- BrowserMan's site-optimized automation scripts
+- delegated browser access that the user can approve and revoke
 
 Do not ask the user for BrowserMan email/password in chat.
-Do not ask the user to register through an API endpoint.
+Do not tell the user to register through an API.
 Do not lead with fallback API keys.
 
-## Standard setup path
+## When to use your native browser tool vs BrowserMan
 
-The standard path is:
+Prefer your native or default browser tool when:
+- the page is public
+- no user login or session is required
+- the task is simple browsing, reading, or lightweight interaction
+- you do not need the user's real browser state
 
-1. Install the BrowserMan CLI if needed
-2. Run:
+Prefer BrowserMan when:
+- the task depends on the user's real logged-in browser session
+- you need access to the user's actual browser state, cookies, tabs, or extension-connected browser
+- BrowserMan provides a matching optimized script for the target site
+- the native browser tool is not reliable enough for the authenticated flow
+- the user has explicitly approved BrowserMan access for this task pattern
+
+Tool selection order:
+1. If your native/default browser tool is enough for a public, non-authenticated task, use it first.
+2. If the task needs the user's real browser session or BrowserMan has a matching optimized script, use BrowserMan.
+3. Inside BrowserMan, check scripts first.
+4. Only fall back to low-level BrowserMan page commands when no script matches.
+
+## Recommended setup
+
+Recommended path:
 
 ```bash
-npx browserman-cli setup
+npm install -g browserman-cli
+browserman setup
+browserman doctor
 ```
 
-3. Approve the request in BrowserMan on the web
-4. Validate the saved delegated setup:
+Fallback if BrowserMan CLI is not globally available:
 
 ```bash
-npx browserman-cli doctor
+npx -y browserman-cli setup
+npx -y browserman-cli doctor
+```
+
+If the user already has an approval code, the direct variation is:
+
+```bash
+npx -y browserman-cli setup --code <bm_agreq_...>
 ```
 
 BrowserMan stores delegated local config at:
@@ -52,13 +76,11 @@ Treat that file as the local source of truth for:
 - browserScopeMode
 - capabilities
 
-## Preferred interface order
+## Preferred BrowserMan interface order
 
 Use BrowserMan in this order:
-
 1. BrowserMan CLI
-2. BrowserMan MCP only when your host expects MCP
-3. Raw BrowserMan HTTP only if CLI is unavailable
+2. Raw BrowserMan HTTP only if CLI is unavailable
 
 Prefer commands like:
 
@@ -76,52 +98,7 @@ browserman script list --json
 browserman script run --site x.com --action search --text "browserman" --json
 ```
 
-## MCP usage
-
-If your host expects MCP, first complete delegated setup, then configure BrowserMan MCP with:
-
-```json
-{
-  "mcpServers": {
-    "browserman": {
-      "command": "browserman",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-If BrowserMan is not installed globally, use a one-off command form that your MCP host supports, for example:
-
-```json
-{
-  "mcpServers": {
-    "browserman": {
-      "command": "npx",
-      "args": ["-y", "browserman-cli", "mcp"]
-    }
-  }
-}
-```
-
-## Recovery commands
-
-If setup is missing or broken, suggest exactly:
-
-```bash
-npx browserman-cli setup
-npx browserman-cli doctor
-```
-
-If the user already has an approval code, the direct variation is:
-
-```bash
-npx browserman-cli setup --code <bm_agreq_...>
-```
-
-Expected token families:
-- approval request code: `bm_agreq_...`
-- delegated runtime token: `bm_dlg_...`
+If BrowserMan is only available through npx in the current environment, use the same commands with `npx -y browserman-cli ...`.
 
 ## Capability-scoped tokens
 
