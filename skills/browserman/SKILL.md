@@ -97,7 +97,10 @@ browserman page type --text "hello" --json
 browserman page press --key Enter --json
 browserman page screenshot --out ./page.png --json
 browserman script list --json
-browserman script run --site x.com --action search --text "browserman" --json
+browserman script actions --platform x --json
+browserman script describe --platform x --action search --json
+browserman script run --platform x --action search --text "browserman" --json
+browserman execution wait <executionId> --json
 ```
 
 If BrowserMan is only available through npx in the current environment, use the same commands with `npx -y browserman-cli ...`.
@@ -122,11 +125,15 @@ Always follow this order.
 
 ### Step 0: Check the BrowserMan script catalog first
 
-Before low-level browser control, list scripts:
+Before low-level browser control, discover scripts in small steps:
 
 ```bash
 browserman script list --json
+browserman script actions --platform <platform-id> --json
+browserman script describe --platform <platform-id> --action <action> --json
 ```
+
+Use canonical platform ids such as `x`, `forem`, `amazon`, `taobao`, `zhihu`, `producthunt`, or `medium`. Do not use domains as platform ids. Domains such as `x.com`, `dev.to`, or `amazon.co.jp` are aliases or runtime targets, not the `--platform` value.
 
 If a matching platform/action exists, prefer `browserman script run`.
 
@@ -142,10 +149,18 @@ If this returns offline or 503, the browser is not currently connected.
 
 ### Step 2A: If a script matches, run it
 
-Example:
+Examples:
 
 ```bash
-browserman script run --site x.com --action search --text "browserman" --json
+browserman script run --platform x --action search --text "browserman" --json
+browserman script run --platform forem --base-url https://dev.to --action get_feed --json
+browserman script run --platform amazon --marketplace jp --action search --query "keyboard" --json
+```
+
+If `script run` returns an `executionId`, verify completion before reporting success:
+
+```bash
+browserman execution wait <executionId> --json
 ```
 
 ### Step 2B: If no script matches, use low-level page commands

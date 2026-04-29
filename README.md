@@ -16,11 +16,11 @@ Current contents:
 Recommended next step after installing the skill:
 
 ```bash
-npx browserman-cli setup
+npx -y browserman-cli setup
 ```
 
 Then validate with:
 
 ```bash
-npx browserman-cli doctor
+npx -y browserman-cli doctor
 ```
