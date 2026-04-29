@@ -42,6 +42,11 @@ Tool selection order:
 
 After installing this skill, proactively complete BrowserMan setup before trying to use BrowserMan for a real task.
 
+Naming rule:
+- npm package: `browserman-cli`
+- installed executable and documented command: `browserman`
+- one-off npx uses the package name, for example `npx -y browserman-cli setup`
+
 Recommended path:
 
 ```bash
@@ -103,7 +108,7 @@ browserman script run --platform x --action search --text "browserman" --json
 browserman execution wait <executionId> --json
 ```
 
-If BrowserMan is only available through npx in the current environment, use the same commands with `npx -y browserman-cli ...`.
+If BrowserMan is only available through npx in the current environment, use the package name before the subcommand, for example `npx -y browserman-cli setup` or `npx -y browserman-cli script list --json`.
 
 ## Capability-scoped tokens
 
