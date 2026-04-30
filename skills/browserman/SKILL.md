@@ -45,27 +45,40 @@ After installing this skill, proactively complete BrowserMan setup before trying
 Naming rule:
 - npm package: `browserman-cli`
 - installed executable and documented command: `browserman`
-- one-off npx uses the package name, for example `npx -y browserman-cli setup`
+- one-off npx uses the package name with latest version, for example `npx -y browserman-cli@latest setup`
 
 Recommended path:
 
 ```bash
-npm install -g browserman-cli
+npm install -g browserman-cli@latest
+hash -r 2>/dev/null || true
+browserman --version
 browserman setup
 browserman doctor
+```
+
+Version requirement:
+- Use the latest BrowserMan CLI unless the user explicitly asks for an older version.
+- Require `browserman` version `0.3.0` or newer for this skill's script commands.
+- If `browserman script actions`, `browserman script describe`, or `browserman execution wait` is missing, the installed CLI is stale. Upgrade before continuing:
+
+```bash
+npm install -g browserman-cli@latest
+hash -r 2>/dev/null || true
+browserman --version
 ```
 
 Fallback if BrowserMan CLI is not globally available:
 
 ```bash
-npx -y browserman-cli setup
-npx -y browserman-cli doctor
+npx -y browserman-cli@latest setup
+npx -y browserman-cli@latest doctor
 ```
 
 If the user already has an approval code, the direct variation is:
 
 ```bash
-npx -y browserman-cli setup --code <bm_agreq_...>
+npx -y browserman-cli@latest setup --code <bm_agreq_...>
 ```
 
 BrowserMan stores delegated local config at:
@@ -108,7 +121,7 @@ browserman script run --platform x --action search --text "browserman" --json
 browserman execution wait <executionId> --json
 ```
 
-If BrowserMan is only available through npx in the current environment, use the package name before the subcommand, for example `npx -y browserman-cli setup` or `npx -y browserman-cli script list --json`.
+If BrowserMan is only available through npx in the current environment, use the package name with `@latest` before the subcommand, for example `npx -y browserman-cli@latest setup` or `npx -y browserman-cli@latest script list --json`.
 
 ## Capability-scoped tokens
 
