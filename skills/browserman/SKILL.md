@@ -1,6 +1,6 @@
 ---
 name: browserman
-description: Use BrowserMan when an agent needs the user's real browser environment, delegated access to a real logged-in session, or BrowserMan's site-optimized automation scripts.
+description: Use BrowserMan when an agent needs the user's real browser environment, optimized official scripts, or Agent-authored/community scripts running through BrowserMan's standard context.
 ---
 
 # BrowserMan
@@ -11,6 +11,7 @@ Use BrowserMan when the task depends on:
 - the user's existing login session
 - real browser state, tabs, cookies, or extension-connected context
 - BrowserMan's site-optimized automation scripts
+- user-authored or community automation scripts that run on the Agent machine
 - delegated browser access that the user can approve and revoke
 
 Do not ask the user for BrowserMan email/password in chat.
@@ -36,7 +37,8 @@ Tool selection order:
 1. If your native/default browser tool is enough for a public, non-authenticated task, use it first.
 2. If the task needs the user's real browser session or BrowserMan has a matching optimized script, use BrowserMan.
 3. Inside BrowserMan, check scripts first.
-4. Only fall back to low-level BrowserMan page commands when no script matches.
+4. If no official script matches, inspect or create a reusable Agent-local script.
+5. Use low-level BrowserMan page commands to explore unfamiliar pages or handle genuinely one-off recovery.
 
 ## Recommended setup
 
@@ -59,8 +61,8 @@ browserman doctor
 
 Version requirement:
 - Use the latest BrowserMan CLI unless the user explicitly asks for an older version.
-- Require `browserman` version `0.3.0` or newer for this skill's script commands.
-- If `browserman script actions`, `browserman script describe`, or `browserman execution wait` is missing, the installed CLI is stale. Upgrade before continuing:
+- Require `browserman` version `0.4.0` or newer for Agent-local script commands.
+- If `browserman script inspect`, `browserman script describe-local`, or `browserman script run --local` is missing, the installed CLI is stale. Upgrade before continuing:
 
 ```bash
 npm install -g browserman-cli@latest
@@ -118,6 +120,9 @@ browserman script list --json
 browserman script actions --platform x --json
 browserman script describe --platform x --action search --json
 browserman script run --platform x --action search --text "browserman" --json
+browserman script inspect ./my-script --json
+browserman script describe-local ./my-script --action read --json
+browserman script run --local ./my-script --action read --json
 browserman execution wait <executionId> --json
 ```
 
@@ -181,7 +186,58 @@ If `script run` returns an `executionId`, verify completion before reporting suc
 browserman execution wait <executionId> --json
 ```
 
-### Step 2B: If no script matches, use low-level page commands
+### Step 2B: If no official script matches, create or reuse a local script
+
+Agent-local scripting is the normal BrowserMan extensibility path. Use low-level page commands to discover the site, then save stable logic in `browserman.script.js` or `index.js` so the same Agent or other Agents can reuse it.
+
+Inspect community code before execution:
+
+```bash
+browserman script inspect ./my-script --json
+browserman script describe-local ./my-script --action read --json
+```
+
+Run it against the approved real browser:
+
+```bash
+browserman script run \
+  --local ./my-script \
+  --action read \
+  --browser <browser-name> \
+  --params-json '{}' \
+  --json
+```
+
+Script example:
+
+```js
+import { defineScript } from 'browserman-cli/scripts';
+
+export default defineScript({
+  id: 'community.page-details',
+  name: 'page-details',
+  version: '1.0.0',
+  apiVersion: '^1.0.0',
+  actions: {
+    read: {
+      params: { type: 'object', properties: {} },
+      async run(ctx) {
+        const [title, location] = await Promise.all([
+          ctx.evaluate('document.title'),
+          ctx.getUrl(),
+        ]);
+        return { title, url: location?.url || String(location || '') };
+      },
+    },
+  },
+});
+```
+
+The action signature is `(ctx, params)`. Official server scripts and Agent-local scripts share the same CTX methods. BrowserMan reserves the browser, renews an execution lease, records the result, cleans the session, and releases the browser.
+
+Local/community scripts have the user's local Node.js permissions, like npm dependencies. Review and trust source before running it. Do not upload arbitrary community Node.js code to the BrowserMan server.
+
+### Step 2C: Use low-level page commands for exploration or one-off recovery
 
 Recommended low-level sequence:
 1. `browserman page open --url ... --json`
@@ -189,6 +245,8 @@ Recommended low-level sequence:
 3. `browserman page click` / `browserman page type` / `browserman page press`
 4. `browserman page read --json` again after page changes
 5. `browserman page screenshot --out ./page.png --json` or `browserman page url --json` to verify state
+
+For recurring or shareable workflows, convert the proven low-level sequence into a local script instead of repeatedly shelling out to `browserman page ...` from inside JavaScript.
 
 ## Destructive-action checklist
 
@@ -217,3 +275,7 @@ Do not:
 - assume every browser is in scope for the delegated token
 - assume every delegated token has `commands`
 - skip the script-catalog check
+- run unreviewed community JavaScript
+- hand-write a separate incompatible CTX
+- use repeated `browserman page ...` subprocesses as the script runtime
+- assume Agent-local scripts bypass BrowserMan execution ownership
